@@ -1,0 +1,21 @@
+---
+- name: 'Initialize a variable too keep track of changes'
+  set_fact:
+    _needs_password_regen: false
+  delegate_to: localhost
+  run_once: true
+
+- name: 'Verify if a file exists on the remote host'
+  stat: path="/tmp/password"
+  register: _stat
+
+- name: "Set the flag to regen the password if target file doesn't exist"
+  set_fact:
+    _needs_password_regen: "{{
+      _needs_password_regen or not _stat.stat.exists
+    }}"
+  delegate_to: localhost
+
+- name: 'Deploy new password'
+  shell: 'true'
+  when: _needs_password_regen|bool
